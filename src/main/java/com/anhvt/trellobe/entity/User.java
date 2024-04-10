@@ -1,11 +1,13 @@
 package com.anhvt.trellobe.entity;
 
+import com.anhvt.trellobe.util.converter.JsonToStringListConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -41,4 +43,8 @@ public class User extends BaseEntity implements Serializable {
 
     @Column(name = "verify_token")
     String verifyToken;
+
+    @Column(name = "role_id")
+    @Convert(converter = JsonToStringListConverter.class)
+    List<String> roleIds;
 }
