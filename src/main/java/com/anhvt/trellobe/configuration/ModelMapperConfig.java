@@ -1,4 +1,4 @@
-package com.anhvt.trellobe.config;
+package com.anhvt.trellobe.configuration;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
