@@ -11,7 +11,9 @@ public enum ErrorCode {
     USER_EXISTED(HttpStatus.OK, "User existed"),
     USERNAME_INVALID(HttpStatus.OK, "Username is invalid"),
     PASSWORD_INVALID(HttpStatus.OK, "Password is invalid"),
-    USER_NOT_EXISTED(HttpStatus.OK, "User not existed");
+    USER_NOT_EXISTED(HttpStatus.OK, "User not existed"),
+    UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "Unauthorize"),
+    ;
 
 
     private final HttpStatus status;
