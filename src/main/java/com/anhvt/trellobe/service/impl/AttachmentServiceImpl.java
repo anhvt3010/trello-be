@@ -5,7 +5,9 @@ import com.anhvt.trellobe.dto.ServiceResult;
 import com.anhvt.trellobe.entity.Attachment;
 import com.anhvt.trellobe.repository.AttachmentRepository;
 import com.anhvt.trellobe.service.AttachmentService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +19,11 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AttachmentServiceImpl implements AttachmentService {
-    private final Logger log = LoggerFactory.getLogger(AttachmentServiceImpl.class);
-    private final AttachmentRepository attachmentRepository;
-    private final ModelMapper mapper;
+    Logger log = LoggerFactory.getLogger(AttachmentServiceImpl.class);
+    AttachmentRepository attachmentRepository;
+    ModelMapper mapper;
 
     @Override
     public ServiceResult<AttachmentDTO> findOne(String id) {

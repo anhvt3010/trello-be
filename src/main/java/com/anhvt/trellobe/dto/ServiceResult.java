@@ -1,9 +1,6 @@
 package com.anhvt.trellobe.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serializable;
@@ -13,6 +10,7 @@ import java.io.Serializable;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ServiceResult<T> implements Serializable {
     private HttpStatus status;
     private String message;

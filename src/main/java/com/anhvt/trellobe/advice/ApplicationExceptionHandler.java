@@ -1,6 +1,6 @@
 package com.anhvt.trellobe.advice;
 
-import com.anhvt.trellobe.advice.exception.NotFoundException;
+import com.anhvt.trellobe.advice.exception.AppException;
 import com.anhvt.trellobe.dto.ServiceResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -24,8 +24,8 @@ public class ApplicationExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(NotFoundException.class)
-    public ServiceResult<?> handleExisted(NotFoundException ex){
+    @ExceptionHandler(AppException.class)
+    public ServiceResult<?> handleExisted(AppException ex){
         ErrorCode code = ex.getErrorCode();
         ServiceResult<?> result = new ServiceResult<>();
         result.setStatus(code.getStatus());
