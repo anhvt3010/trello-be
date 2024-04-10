@@ -1,7 +1,7 @@
 package com.anhvt.trellobe.service.impl;
 
 import com.anhvt.trellobe.advice.ErrorCode;
-import com.anhvt.trellobe.advice.exception.NotFoundException;
+import com.anhvt.trellobe.advice.exception.AppException;
 import com.anhvt.trellobe.dto.ServiceResult;
 import com.anhvt.trellobe.dto.UserDTO;
 import com.anhvt.trellobe.entity.User;
@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     public ServiceResult<UserDTO> findOne(String id) {
         ServiceResult<UserDTO> result =  new ServiceResult<>();
 //        Optional<User> user = userRepository.findById(id);
-        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         result.setStatus(HttpStatus.OK);
         result.setData(mapper.map(user, UserDTO.class));
 //        if (user.isPresent()) {

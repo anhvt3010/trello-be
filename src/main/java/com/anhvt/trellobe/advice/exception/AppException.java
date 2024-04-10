@@ -10,6 +10,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @MappedSuperclass
-public class NotFoundException extends RuntimeException {
+public class AppException extends RuntimeException {
     private ErrorCode errorCode;
 }
