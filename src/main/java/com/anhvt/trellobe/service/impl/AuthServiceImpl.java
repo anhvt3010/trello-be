@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
     public ServiceResult<AuthResponse> authenticate(AuthRequest request) {
         ServiceResult<AuthResponse> result = new ServiceResult<>();
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
         if (!new BCryptPasswordEncoder(10).matches(request.getPassword(), user.getPassword())){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }

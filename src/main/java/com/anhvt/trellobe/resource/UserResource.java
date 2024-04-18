@@ -26,5 +26,4 @@ public class UserResource {
         ServiceResult<UserDTO> result = userService.save(userDTO);
         return new ResponseEntity<>(result, result.getStatus());
     }
-
 }
