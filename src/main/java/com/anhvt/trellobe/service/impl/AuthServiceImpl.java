@@ -9,6 +9,7 @@ import com.anhvt.trellobe.dto.reponse.IntrospectResponse;
 import com.anhvt.trellobe.dto.request.AuthRequest;
 import com.anhvt.trellobe.dto.request.IntrospectRequest;
 import com.anhvt.trellobe.dto.request.LogoutRequest;
+import com.anhvt.trellobe.dto.request.RefreshRequest;
 import com.anhvt.trellobe.entity.InvalidToken;
 import com.anhvt.trellobe.entity.User;
 import com.anhvt.trellobe.repository.InvalidTokenRepository;
@@ -55,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         if (!new BCryptPasswordEncoder(10).matches(request.getPassword(), user.getPassword())){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        var token = generateToken(request.getUsername());
+        var token = generateToken(user);
         result.setData(AuthResponse.builder()
                         .token(token)
                         .authenticated(true)
@@ -96,6 +97,30 @@ public class AuthServiceImpl implements AuthService {
         return result;
     }
 
+    @Override
+    public ServiceResult<AuthResponse> refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        ServiceResult<AuthResponse> result = new ServiceResult<>();
+        var signJWT = verifyToken(request.getToken());
+        var jit = signJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signJWT.getJWTClaimsSet().getExpirationTime();
+        InvalidToken invalidToken = InvalidToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+        invalidTokenRepository.save(invalidToken);
+
+        var username = signJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(username).orElseThrow(
+                () -> new AppException(ErrorCode.UNAUTHENTICATED));
+        var token = generateToken(user);
+        result.setData(AuthResponse.builder()
+                        .authenticated(true)
+                        .token(token)
+                .build());
+        result.setStatus(HttpStatus.OK);
+        return result;
+    }
+
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
@@ -113,10 +138,10 @@ public class AuthServiceImpl implements AuthService {
         return signedJWT;
     }
 
-    private String generateToken(String username){
+    private String generateToken(User user){
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("trellobe.anhvt.com")
                 .issueTime(new Date())
                 .expirationTime(Date.from(

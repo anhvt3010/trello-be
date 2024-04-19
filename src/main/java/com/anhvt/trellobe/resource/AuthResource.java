@@ -6,6 +6,7 @@ import com.anhvt.trellobe.dto.reponse.IntrospectResponse;
 import com.anhvt.trellobe.dto.request.AuthRequest;
 import com.anhvt.trellobe.dto.request.IntrospectRequest;
 import com.anhvt.trellobe.dto.request.LogoutRequest;
+import com.anhvt.trellobe.dto.request.RefreshRequest;
 import com.anhvt.trellobe.service.AuthService;
 import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
@@ -39,6 +40,12 @@ public class AuthResource {
     @PostMapping("/logout")
     public ResponseEntity<ServiceResult<?>> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
         ServiceResult<?> result = authService.logout(request);
+        return new ResponseEntity<>(result, result.getStatus());
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ServiceResult<?>> refresh(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+        ServiceResult<?> result = authService.refreshToken(request);
         return new ResponseEntity<>(result, result.getStatus());
     }
 
