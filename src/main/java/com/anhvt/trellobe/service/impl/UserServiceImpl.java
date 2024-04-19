@@ -43,14 +43,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public ServiceResult<UserDTO> save(UserDTO userDTO) {
         ServiceResult<UserDTO> result =  new ServiceResult<>();
-        try {
+//        try {
             User user = userRepository.save(userMapper.toEntity(userDTO));
             result.setStatus(HttpStatus.CREATED);
             result.setData(userMapper.toDto(user));
-        } catch (Exception e) {
-            result.setStatus(HttpStatus.BAD_REQUEST);
-            result.setMessage("user.create.bad_request");
-        }
+//        } catch (Exception e) {
+//            result.setStatus(HttpStatus.BAD_REQUEST);
+//            result.setMessage("user.create.bad_request");
+//        }
         return result;
     }
 }

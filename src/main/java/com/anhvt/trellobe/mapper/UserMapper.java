@@ -21,7 +21,8 @@ public class UserMapper implements EntityMapper<User, UserDTO>{
                 .isActive((byte) 0)
                 .verifyToken(dto.getVerifyToken())
                 .username(dto.getUsername())
-                .password(new BCryptPasswordEncoder(10).encode(dto.getPassword()))
+                .password(dto.getPassword())
+                .roleIds(dto.getRoleIds())
                 .build();
         user.setCreatedAt(dto.getCreatedAt());
         user.setUpdatedAt(dto.getUpdatedAt());
@@ -41,6 +42,7 @@ public class UserMapper implements EntityMapper<User, UserDTO>{
                         : StatusUser.UN_ACTIVE.getMessage())
                 .verifyToken(entity.getVerifyToken())
                 .username(entity.getUsername())
+                .roleIds(entity.getRoleIds())
                 .build();
         userDTO.setCreatedAt(entity.getCreatedAt());
         userDTO.setUpdatedAt(entity.getUpdatedAt());

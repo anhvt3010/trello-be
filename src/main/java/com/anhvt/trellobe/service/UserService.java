@@ -9,6 +9,4 @@ import org.springframework.stereotype.Service;
 public interface UserService {
     ServiceResult<UserDTO> findOne(String id);
     ServiceResult<UserDTO> save(UserDTO userDTO);
-
-
 }

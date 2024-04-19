@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.USE_DEFAULTS)
@@ -23,7 +24,7 @@ public class UserDTO  implements Serializable {
     @Email(message = "Invalid email")
     @NotNull(message = "Email cannot be blank")
     String email;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // chỉ cho phép ghi
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     String password;
     String username;
     String displayName;
@@ -32,4 +33,5 @@ public class UserDTO  implements Serializable {
     String verifyToken;
     Timestamp createdAt;
     Timestamp updatedAt;
+    List<String> roleIds;
 }

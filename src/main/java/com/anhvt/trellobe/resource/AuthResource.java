@@ -5,7 +5,10 @@ import com.anhvt.trellobe.dto.reponse.AuthResponse;
 import com.anhvt.trellobe.dto.reponse.IntrospectResponse;
 import com.anhvt.trellobe.dto.request.AuthRequest;
 import com.anhvt.trellobe.dto.request.IntrospectRequest;
+import com.anhvt.trellobe.dto.request.LogoutRequest;
+import com.anhvt.trellobe.dto.request.RefreshRequest;
 import com.anhvt.trellobe.service.AuthService;
+import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.text.ParseException;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,8 +33,21 @@ public class AuthResource {
     }
 
     @PostMapping("/introspect")
-    public ResponseEntity<ServiceResult<IntrospectResponse>> verifyToken(@RequestBody IntrospectRequest request){
+    public ResponseEntity<ServiceResult<IntrospectResponse>> verifyToken(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
         ServiceResult<IntrospectResponse> result = authService.introspect(request);
         return new ResponseEntity<>(result, result.getStatus());
     }
+    @PostMapping("/logout")
+    public ResponseEntity<ServiceResult<?>> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        ServiceResult<?> result = authService.logout(request);
+        return new ResponseEntity<>(result, result.getStatus());
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ServiceResult<?>> refresh(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+        ServiceResult<?> result = authService.refreshToken(request);
+        return new ResponseEntity<>(result, result.getStatus());
+    }
+
+
 }
