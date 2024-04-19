@@ -2,12 +2,16 @@ package com.anhvt.trellobe.service.impl;
 
 import com.anhvt.trellobe.advice.ErrorCode;
 import com.anhvt.trellobe.advice.exception.AppException;
+import com.anhvt.trellobe.configuration.MessageConfig;
 import com.anhvt.trellobe.dto.ServiceResult;
 import com.anhvt.trellobe.dto.reponse.AuthResponse;
 import com.anhvt.trellobe.dto.reponse.IntrospectResponse;
 import com.anhvt.trellobe.dto.request.AuthRequest;
 import com.anhvt.trellobe.dto.request.IntrospectRequest;
+import com.anhvt.trellobe.dto.request.LogoutRequest;
+import com.anhvt.trellobe.entity.InvalidToken;
 import com.anhvt.trellobe.entity.User;
+import com.anhvt.trellobe.repository.InvalidTokenRepository;
 import com.anhvt.trellobe.repository.UserRepository;
 import com.anhvt.trellobe.service.AuthService;
 import com.nimbusds.jose.*;
@@ -29,6 +33,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -36,6 +41,9 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthServiceImpl implements AuthService {
     UserRepository userRepository;
+    InvalidTokenRepository invalidTokenRepository;
+    MessageConfig messageConfig;
+
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
@@ -57,23 +65,52 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ServiceResult<IntrospectResponse> introspect(IntrospectRequest request){
+    public ServiceResult<IntrospectResponse> introspect(IntrospectRequest request) throws ParseException, JOSEException {
         ServiceResult<IntrospectResponse> result = new ServiceResult<>();
         var token = request.getToken();
         try {
-            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-            SignedJWT signedJWT = SignedJWT.parse(token);
-            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-            var verified = signedJWT.verify(verifier);
-
-            result.setData(IntrospectResponse.builder()
-                            .valid( verified && expirationTime.after(new Date()))
-                    .build());
-            result.setStatus(HttpStatus.OK);
-            return result;
-        } catch (JOSEException | ParseException e) {
-            throw new RuntimeException(e);
+            verifyToken(token);
+            result.setData(IntrospectResponse.builder().valid(true).build());
+        } catch (AppException e) {
+            result.setData(IntrospectResponse.builder().valid(false).build());
         }
+        result.setStatus(HttpStatus.OK);
+        return result;
+    }
+
+    @Override
+    public ServiceResult<?> logout(LogoutRequest request) throws ParseException, JOSEException {
+        ServiceResult<?> result = new ServiceResult<>();
+        var signToken = verifyToken(request.getToken());
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidToken  invalidToken = InvalidToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidTokenRepository.save(invalidToken);
+        result.setStatus(HttpStatus.OK);
+        result.setMessage(messageConfig.getMessage("logout.success"));
+        return result;
+    }
+
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        var verified = signedJWT.verify(verifier);
+
+        if(!(verified && expirationTime.after(new Date()))){
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if(invalidTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        return signedJWT;
     }
 
     private String generateToken(String username){
@@ -85,6 +122,8 @@ public class AuthServiceImpl implements AuthService {
                 .expirationTime(Date.from(
                         Instant.now().plus(1, ChronoUnit.HOURS)
                 ))
+                .claim("scope", "pham vi cua token")
+                .jwtID(UUID.randomUUID().toString())
                 .claim("customClaim", "Custom")
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
