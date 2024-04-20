@@ -70,8 +70,41 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public ServiceResult<List<BoardDTO>> findByUserId(String userId) {
-        return null;
+    public ServiceResult<BoardDTO> findByUsername(String username) {
+        log.debug("Request to get Board by userId: {}", username);
+        ServiceResult<BoardDTO> result = new ServiceResult<>();
+        List<ColumnDTO> columnDTOS = new ArrayList<>();
+        BoardDTO boardDTO;
+        try {
+            Optional<Board> board = boardRepository.findByUsername(username);
+            if (board.isPresent()){
+                //Lấy tất cả Columns theo Board
+                List<ColumnE> columns = columnRepository.findByBoardId(board.get().getId());
+
+                //Lấy tất cả Column có dữ liệu Cards
+                columns.forEach(column -> {
+                    ColumnDTO columnDTO;
+                    columnDTO = mapper.map(columnMapper.toDto(column), ColumnDTO.class);
+                    columnDTO.setCards(cardRepository.findCardByColumnId(column.getId()).stream()
+                            .map(c -> mapper.map(c, CardDTO.class))
+                            .toList());
+                    columnDTOS.add(columnDTO);
+                });
+
+                boardDTO = mapper.map(board.get(), BoardDTO.class);
+                boardDTO.setColumns(columnDTOS);
+
+                result.setStatus(HttpStatus.OK);
+                result.setData(boardDTO);
+            } else {
+                result.setStatus(HttpStatus.NOT_FOUND);
+                result.setMessage("board.id.not_found");
+            }
+        } catch (Exception e){
+            result.setStatus(HttpStatus.BAD_REQUEST);
+            result.setMessage("board.id.bad_request");
+        }
+        return result;
     }
 
     @Override

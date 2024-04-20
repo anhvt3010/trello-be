@@ -7,10 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BoardRepository extends JpaRepository<Board, String> {
     @Query("SELECT b, c FROM Board b JOIN ColumnE c WHERE c.id IN :columnIds")
     List<Object[]> findBoardWithColumns(@Param("columnIds") List<Integer> columnIds);
 
+    Optional<Board> findByUsername(String username);
 }

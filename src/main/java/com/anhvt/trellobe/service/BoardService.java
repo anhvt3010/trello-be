@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface BoardService {
     ServiceResult<BoardDTO> findOne(String id);
-    ServiceResult<List<BoardDTO>> findByUserId(String userId);
+    ServiceResult<BoardDTO> findByUsername(String username);
     ServiceResult<BoardDTO> update(BoardDTO boardDTO);
     ServiceResult<BoardDTO> updateColumnOrder(String boardId, List<String> columnOrderIds);
     void delete(String id);
