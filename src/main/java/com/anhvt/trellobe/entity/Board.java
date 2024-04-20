@@ -25,6 +25,9 @@ public class Board extends BaseEntity{
     @GenericGenerator(name = "uuid", strategy = "org.hibernate.id.UUIDGenerator")
     private String id;
 
+    @Column(name = "username")
+    private String username;
+
     @Column(name = "title")
     @NotEmpty
     @Size(max = 255)

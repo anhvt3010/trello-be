@@ -18,6 +18,7 @@ import java.util.List;
 public class BoardDTO {
     @JsonProperty("_id")
     private String id;
+    private String username;
     private String title;
     private String type;
     private String description;

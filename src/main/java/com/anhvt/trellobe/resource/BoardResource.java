@@ -22,9 +22,10 @@ public class BoardResource {
         ServiceResult<BoardDTO> result = boardService.findOne(id);
         return new ResponseEntity<>(result, result.getStatus());
     }
-    @GetMapping("/by-user/{userId}")
-    public ResponseEntity<ServiceResult<BoardDTO>> findByUserId(@PathVariable("userId") Integer id){
-        return null;
+    @GetMapping("/by-user/{username}")
+    public ResponseEntity<ServiceResult<BoardDTO>> findByUsername(@PathVariable("username") String username){
+        ServiceResult<BoardDTO> result = boardService.findByUsername(username);
+        return new ResponseEntity<>(result, result.getStatus());
     }
 
     @PutMapping("/{id}")
