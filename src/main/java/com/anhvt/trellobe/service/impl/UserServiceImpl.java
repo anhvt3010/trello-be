@@ -7,6 +7,7 @@ import com.anhvt.trellobe.dto.UserDTO;
 import com.anhvt.trellobe.entity.User;
 import com.anhvt.trellobe.mapper.UserMapper;
 import com.anhvt.trellobe.repository.UserRepository;
+import com.anhvt.trellobe.service.BoardService;
 import com.anhvt.trellobe.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
+    BoardService boardService;
     UserMapper userMapper;
     ModelMapper mapper;
 
@@ -43,14 +45,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public ServiceResult<UserDTO> save(UserDTO userDTO) {
         ServiceResult<UserDTO> result =  new ServiceResult<>();
-//        try {
+        try {
             User user = userRepository.save(userMapper.toEntity(userDTO));
             result.setStatus(HttpStatus.CREATED);
             result.setData(userMapper.toDto(user));
-//        } catch (Exception e) {
-//            result.setStatus(HttpStatus.BAD_REQUEST);
-//            result.setMessage("user.create.bad_request");
-//        }
+            boardService.save(boardService.generateBoard(userDTO));
+        } catch (Exception e) {
+            result.setStatus(HttpStatus.BAD_REQUEST);
+            result.setMessage("user.create.bad_request");
+        }
         return result;
     }
 }

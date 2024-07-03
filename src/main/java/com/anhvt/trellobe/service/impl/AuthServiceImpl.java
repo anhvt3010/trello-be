@@ -145,7 +145,7 @@ public class AuthServiceImpl implements AuthService {
                 .issuer("trellobe.anhvt.com")
                 .issueTime(new Date())
                 .expirationTime(Date.from(
-                        Instant.now().plus(1, ChronoUnit.HOURS)
+                        Instant.now().plus(24, ChronoUnit.HOURS)
                 ))
                 .claim("scope", "pham vi cua token")
                 .jwtID(UUID.randomUUID().toString())

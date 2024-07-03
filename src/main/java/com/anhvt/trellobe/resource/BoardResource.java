@@ -17,6 +17,12 @@ import java.util.List;
 public class BoardResource {
     private final BoardService boardService;
 
+    @PostMapping
+    public ResponseEntity<ServiceResult<BoardDTO>> save(@RequestBody BoardDTO boardDTO){
+        ServiceResult<BoardDTO> result = boardService.save(boardDTO);
+        return new ResponseEntity<>(result, result.getStatus());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ServiceResult<BoardDTO>> findOne(@PathVariable("id") String id){
         ServiceResult<BoardDTO> result = boardService.findOne(id);

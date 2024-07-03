@@ -1,5 +1,8 @@
 package com.anhvt.trellobe.service.impl;
 
+import com.anhvt.trellobe.advice.ErrorCode;
+import com.anhvt.trellobe.advice.exception.AppException;
+import com.anhvt.trellobe.configuration.MessageConfig;
 import com.anhvt.trellobe.dto.CardDTO;
 import com.anhvt.trellobe.dto.ColumnDTO;
 import com.anhvt.trellobe.dto.ServiceResult;
@@ -13,7 +16,10 @@ import com.anhvt.trellobe.repository.CardRepository;
 import com.anhvt.trellobe.repository.ColumnRepository;
 import com.anhvt.trellobe.service.ColumnService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,31 +33,24 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ColumnServiceImpl implements ColumnService{
-    private final Logger log = LoggerFactory.getLogger(ColumnServiceImpl.class);
-    private final ColumnRepository columnRepository;
-    private final BoardRepository boardRepository;
-    private final CardRepository cardRepository;
-    private final ColumnMapper columnMapper;
-    private final ModelMapper mapper;
+    ColumnRepository columnRepository;
+    BoardRepository boardRepository;
+    CardRepository cardRepository;
+    MessageConfig messageConfig;
+    ColumnMapper columnMapper;
+    ModelMapper mapper;
 
     @Override
     public ServiceResult<ColumnDTO> findOne(String id) {
         log.debug("Request to get Column : {}", id);
         ServiceResult<ColumnDTO> result = new ServiceResult<>();
-        try {
-            Optional<ColumnE> column = columnRepository.findById(id);
-            if (column.isPresent()){
-                result.setStatus(HttpStatus.OK);
-                result.setData(mapper.map(column.get(), ColumnDTO.class));
-            } else {
-                result.setStatus(HttpStatus.NOT_FOUND);
-                result.setMessage("column.id.not_found");
-            }
-        } catch (Exception e){
-            result.setStatus(HttpStatus.BAD_REQUEST);
-            result.setMessage("column.id.bad_request");
-        }
+        ColumnE column = columnRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.COLUMN_NOT_FOUND));
+        result.setStatus(HttpStatus.OK);
+        result.setData(mapper.map(column, ColumnDTO.class));
         return result;
     }
 
@@ -63,7 +62,7 @@ public class ColumnServiceImpl implements ColumnService{
             List<ColumnE> columnEs = columnRepository.findByBoardId(boardId);
             if(columnEs.isEmpty()){
                 result.setStatus(HttpStatus.NOT_FOUND);
-                result.setMessage("columns.board_id.not_found");
+                result.setMessage(messageConfig.getMessage("columns.board_id.not_found"));
             } else {
                 result.setData(columnEs.stream()
                         .map(column -> mapper.map(column, ColumnDTO.class))
@@ -85,7 +84,8 @@ public class ColumnServiceImpl implements ColumnService{
             if(boardRepository.existsById(columnDTO.getBoardId())){
                 ColumnE column = columnRepository.save(mapper.map(columnDTO, ColumnE.class));
 
-                Board board = boardRepository.findById(columnDTO.getBoardId()).orElseThrow(() -> new RuntimeException("Board not found"));
+                Board board = boardRepository.findById(columnDTO.getBoardId())
+                        .orElseThrow(() -> new AppException(ErrorCode.BOARD_NOT_FOUND));
 
                 List<String> columnOrderIds = board.getColumnOrderIds();
                 if (columnOrderIds == null) {
@@ -98,14 +98,14 @@ public class ColumnServiceImpl implements ColumnService{
 
                 result.setStatus(HttpStatus.CREATED);
                 result.setData(columnMapper.toDto(column));
-                result.setMessage("column.create.success");
+                result.setMessage(messageConfig.getMessage("column.create.success"));
             } else {
                 result.setStatus(HttpStatus.NOT_FOUND);
-                result.setMessage("board.id.not_found");
+                result.setMessage(messageConfig.getMessage("board.id.not_found"));
             }
         } catch (Exception e){
             result.setStatus(HttpStatus.BAD_REQUEST);
-            result.setMessage("column.create.failed");
+            result.setMessage(messageConfig.getMessage("column.create.failed"));
         }
         return result;
     }
@@ -132,7 +132,7 @@ public class ColumnServiceImpl implements ColumnService{
         } catch (EntityNotFoundException e) {
             log.error("Column not found: {}", e.getMessage());
             result.setStatus(HttpStatus.NOT_FOUND);
-            result.setMessage("column.id.not_found");
+            result.setMessage(messageConfig.getMessage("column.id.not_found"));
         } catch (Exception e) {
             log.error("Error updating card order ids: {}", e.getMessage());
             result.setStatus(HttpStatus.BAD_REQUEST);
@@ -170,10 +170,10 @@ public class ColumnServiceImpl implements ColumnService{
         ServiceResult<?> result = new ServiceResult<>();
         try {
             ColumnE column = columnRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Column not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.COLUMN_NOT_FOUND));
 //          // Xoa columnId trong columnOrderIds
             Board board = boardRepository.findById(column.getBoardId())
-                    .orElseThrow(() -> new RuntimeException("Board not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.BOARD_NOT_FOUND));
             List<String> columnOrderIds = board.getColumnOrderIds();
             if (columnOrderIds == null) {
                 columnOrderIds = new ArrayList<>();
@@ -188,10 +188,10 @@ public class ColumnServiceImpl implements ColumnService{
             // Xoa Cards trong column
             cardRepository.deleteByColumnId(id);
 
-            result.setMessage("delete.column.success");
+            result.setMessage(messageConfig.getMessage("delete.column.success"));
             result.setStatus(HttpStatus.OK);
         } catch (Exception e){
-            result.setMessage("delete.column.bad_request");
+            result.setMessage(messageConfig.getMessage("delete.column.bad_request"));
             result.setStatus(HttpStatus.BAD_REQUEST);
         }
         return  result;
