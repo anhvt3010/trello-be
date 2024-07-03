@@ -46,6 +46,14 @@ public class AuthServiceImpl implements AuthService {
     MessageConfig messageConfig;
 
     @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected Long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected Long REFRESHABLE_DURATION;
+
+    @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
     @Override
@@ -70,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
         ServiceResult<IntrospectResponse> result = new ServiceResult<>();
         var token = request.getToken();
         try {
-            verifyToken(token);
+            verifyToken(token, false);
             result.setData(IntrospectResponse.builder().valid(true).build());
         } catch (AppException e) {
             result.setData(IntrospectResponse.builder().valid(false).build());
@@ -82,16 +90,21 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ServiceResult<?> logout(LogoutRequest request) throws ParseException, JOSEException {
         ServiceResult<?> result = new ServiceResult<>();
-        var signToken = verifyToken(request.getToken());
-        String jit = signToken.getJWTClaimsSet().getJWTID();
-        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+        try {
+            var signToken = verifyToken(request.getToken(), true);
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
 
-        InvalidToken  invalidToken = InvalidToken.builder()
-                .id(jit)
-                .expiryTime(expiryTime)
-                .build();
+            InvalidToken  invalidToken = InvalidToken.builder()
+                    .id(jit)
+                    .expiryTime(expiryTime)
+                    .build();
 
-        invalidTokenRepository.save(invalidToken);
+            invalidTokenRepository.save(invalidToken);
+
+        } catch (AppException e){
+            log.info("Token already expired");
+        }
         result.setStatus(HttpStatus.OK);
         result.setMessage(messageConfig.getMessage("logout.success"));
         return result;
@@ -100,7 +113,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ServiceResult<AuthResponse> refreshToken(RefreshRequest request) throws ParseException, JOSEException {
         ServiceResult<AuthResponse> result = new ServiceResult<>();
-        var signJWT = verifyToken(request.getToken());
+        var signJWT = verifyToken(request.getToken(), true);
+
         var jit = signJWT.getJWTClaimsSet().getJWTID();
         var expiryTime = signJWT.getJWTClaimsSet().getExpirationTime();
         InvalidToken invalidToken = InvalidToken.builder()
@@ -121,10 +135,14 @@ public class AuthServiceImpl implements AuthService {
         return result;
     }
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
-        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expirationTime = (isRefresh)
+                ? new Date(signedJWT.getJWTClaimsSet()
+                    .getIssueTime().toInstant()
+                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
         var verified = signedJWT.verify(verifier);
 
         if(!(verified && expirationTime.after(new Date()))){
@@ -145,7 +163,7 @@ public class AuthServiceImpl implements AuthService {
                 .issuer("trellobe.anhvt.com")
                 .issueTime(new Date())
                 .expirationTime(Date.from(
-                        Instant.now().plus(24, ChronoUnit.HOURS)
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS)
                 ))
                 .claim("scope", "pham vi cua token")
                 .jwtID(UUID.randomUUID().toString())

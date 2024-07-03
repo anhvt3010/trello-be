@@ -28,4 +28,7 @@ spring:
 
 jwt:
   signerKey: "WJOeduukzBrxaCcS39uEWucilc17mGjl+Dace+pVfX9JG1nJkPoVbOAOD4FEGvHE"
+  valid-duration: 86400 # giây / 1 ngày
+  refreshable-duration: 259200 # giây / 3 ngày
+
 
