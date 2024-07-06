@@ -12,6 +12,7 @@ import com.anhvt.trellobe.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     BoardService boardService;
@@ -27,7 +29,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ServiceResult<UserDTO> findOne(String id) {
-        ServiceResult<UserDTO> result =  new ServiceResult<>();
+        ServiceResult<UserDTO> result = new ServiceResult<>();
 //        Optional<User> user = userRepository.findById(id);
         User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         result.setStatus(HttpStatus.OK);
@@ -44,16 +46,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ServiceResult<UserDTO> save(UserDTO userDTO) {
-        ServiceResult<UserDTO> result =  new ServiceResult<>();
-        try {
-            User user = userRepository.save(userMapper.toEntity(userDTO));
-            result.setStatus(HttpStatus.CREATED);
-            result.setData(userMapper.toDto(user));
-            boardService.save(boardService.generateBoard(userDTO));
-        } catch (Exception e) {
-            result.setStatus(HttpStatus.BAD_REQUEST);
-            result.setMessage("user.create.bad_request");
-        }
+        log.info("Service: create User : {}", userDTO);
+        ServiceResult<UserDTO> result = new ServiceResult<>();
+
+        User user = userRepository.save(userMapper.toEntity(userDTO));
+        result.setStatus(HttpStatus.CREATED);
+        result.setData(userMapper.toDto(user));
+        boardService.save(boardService.generateBoard(userDTO));
         return result;
     }
 }

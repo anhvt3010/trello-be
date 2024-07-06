@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,7 +27,11 @@ public class UserDTO  implements Serializable {
     String email;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     String password;
+    @NotNull(message = "Username cannot be blank")
+    @Size(max = 50, min = 5)
     String username;
+    @NotNull(message = "Display name cannot be blank")
+    @Size(max = 50, min = 3)
     String displayName;
     String avatar;
     String isActive;
