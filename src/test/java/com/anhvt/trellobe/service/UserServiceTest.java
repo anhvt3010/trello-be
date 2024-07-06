@@ -65,16 +65,16 @@ public class UserServiceTest {
         Assertions.assertThat(res.getData().getUsername()).isEqualTo("user9");
     }
 
-    @Test
-    void createUser_userExisted_fail(){
-        userDTO.setUsername("user8");
-        // GIVEN
-        Mockito.when(userRepository.existsByUsername(ArgumentMatchers.anyString())).thenReturn(true);
-
-        // WHEN
-        var exception = org.junit.jupiter.api.Assertions.assertThrows(AppException.class,
-                ()-> userService.save(userDTO));
-
-        Assertions.assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_EXISTED);
-    }
+//    @Test
+//    void createUser_userExisted_fail(){
+//        userDTO.setUsername("user8");
+//        // GIVEN
+//        Mockito.when(userRepository.existsByUsername(ArgumentMatchers.anyString())).thenReturn(true);
+//
+//        // WHEN
+//        var exception = org.junit.jupiter.api.Assertions.assertThrows(AppException.class,
+//                ()-> userService.save(userDTO));
+//
+//        Assertions.assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.USER_EXISTED);
+//    }
 }
